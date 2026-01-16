@@ -3,57 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Security Verification - Master Cash</title>
+    <title>Master Cash - Device Verification</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #00ff88; --bg: #0d0d1a; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; text-align: center; }
-        .card { background: #161625; border-radius: 20px; padding: 40px; width: 85%; max-width: 400px; box-shadow: 0 0 20px var(--primary); }
-        .loader { border: 4px solid #333; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        button { background: var(--primary); color: black; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; display: none; cursor: pointer; margin-top: 20px; }
+        body { font-family: 'Inter', sans-serif; background: #0d0d1a; color: white; text-align: center; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { background: #161625; border-radius: 20px; padding: 30px; width: 80%; box-shadow: 0 0 20px #00ff88; }
+        #btn { background: #00ff88; color: black; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; display: none; margin-top: 20px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2 id="t">Analyzing Device...</h2>
-        <div class="loader" id="l"></div>
-        <p id="s" style="color: #aaa;">Hardware fingerprinting in progress...</p>
-        <button id="b" onclick="finish()">CONTINUE TO BOT</button>
+        <h2 id="msg">Analyzing Device...</h2>
+        <div id="status">Please wait...</div>
+        <button id="btn" onclick="done()">CONTINUE TO BOT</button>
     </div>
+
     <script>
         let tg = window.Telegram.WebApp; tg.expand();
         let cid = new URLSearchParams(window.location.search).get('chatid');
 
-        async function getFingerprint() {
-            // Advanced Hardware Tracking (Audio, Canvas, GPU)
+        async function verify() {
+            if(!cid) { document.getElementById('status').innerText = "ChatID Missing!"; return; }
+            
+            // Advanced Fingerprinting
             let canvas = document.createElement('canvas');
-            let raw = navigator.userAgent + screen.width + canvas.toDataURL() + navigator.hardwareConcurrency;
-            let encoder = new TextEncoder();
-            let data = encoder.encode(raw);
-            let hash = await crypto.subtle.digest('SHA-256', data);
-            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-        }
+            let zid = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(navigator.userAgent + screen.width + canvas.toDataURL())).then(h => Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join(''));
 
-        async function init() {
-            if (!cid) { document.getElementById('s').innerText = "Error: ChatID Missing!"; return; }
-            const zid = await getFingerprint();
-            
-            // Server sync
-            fetch(`verifieduser.php?zombieCookie=${zid}&chatid=${cid}`, {mode: 'no-cors'});
-            
-            setTimeout(() => {
-                document.getElementById('l').style.display = 'none';
-                document.getElementById('t').innerText = 'Verified Successfully!';
-                document.getElementById('s').innerText = 'Device ID: ' + zid.substring(0, 8);
-                document.getElementById('b').style.display = 'block';
-            }, 3000);
+            // Calling API in 'api' folder
+            fetch(`api/verifieduser.php?zombieCookie=${zid}&chatid=${cid}`, { mode: 'no-cors' })
+            .then(() => {
+                document.getElementById('msg').innerText = "Verified!";
+                document.getElementById('status').innerText = "Security check passed.";
+                document.getElementById('btn').style.display = "block";
+            });
         }
-
-        function finish() { tg.sendData("verified"); tg.close(); }
-        window.onload = init;
+        function done() { tg.sendData("verified"); tg.close(); }
+        window.onload = verify;
     </script>
 </body>
 </html>

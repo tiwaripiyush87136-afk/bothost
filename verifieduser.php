@@ -4,16 +4,16 @@ header("Content-Type: application/json");
 
 $db_file = 'verifications.json';
 
-// --- DATA SAVE (Website se) ---
+// --- DATA SAVE (From Website) ---
 if (isset($_GET['zombieCookie']) && isset($_GET['chatid'])) {
     $zombieId = $_GET['zombieCookie'];
     $chatId = $_GET['chatid'];
 
     $data = file_exists($db_file) ? json_decode(file_get_contents($db_file), true) : ["fingerprints" => [], "verified_users" => []];
 
-    // Anti-cheat: Duplicate hardware block
+    // Anti-cheat: Duplicate device check
     if (isset($data['fingerprints'][$zombieId]) && $data['fingerprints'][$zombieId] != $chatId) {
-        echo json_encode(["status" => "error", "message" => "Multi-account detected"]);
+        echo json_encode(["status" => "error", "message" => "Duplicate Device Detected"]);
         exit;
     }
 
@@ -24,7 +24,7 @@ if (isset($_GET['zombieCookie']) && isset($_GET['chatid'])) {
     exit;
 }
 
-// --- DATA CHECK (Bot se) ---
+// --- DATA CHECK (From Bot) ---
 if (isset($_GET['check_id'])) {
     $checkId = $_GET['check_id'];
     if (file_exists($db_file)) {
