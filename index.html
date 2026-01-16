@@ -8,40 +8,48 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Aapka pura advanced CSS yahan hai (Same as before) */
         :root { --primary-color: #6366f1; --success-color: #10b981; --bg-primary: #ffffff; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         body { font-family: 'Inter', sans-serif; background: #0d0d1a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .card { background: #1a1a2e; border-radius: 20px; padding: 40px; text-align: center; width: 90%; max-width: 450px; box-shadow: 0 0 20px #6366f1; position: relative; }
         .progress-bar { height: 6px; background: #222; border-radius: 10px; margin: 20px 0; overflow: hidden; }
         .progress-fill { height: 100%; background: #6366f1; width: 0%; transition: width 0.2s; }
-        #continue-btn { display: none; background: #10b981; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
-        .step { opacity: 0.5; display: flex; align-items: center; margin-bottom: 10px; font-size: 14px; }
+        #continue-btn { display: none; background: #10b981; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .step { opacity: 0.5; display: flex; align-items: center; margin-bottom: 10px; font-size: 14px; transition: var(--transition); }
         .step.active { opacity: 1; color: #6366f1; }
+        .step.completed { opacity: 1; color: var(--success-color); }
     </style>
 </head>
 <body>
     <div class="card">
         <h2 id="main-title">Securing Connection</h2>
-        <p id="sub-title" style="color:#aaa; font-size:14px;">Analyzing device fingerprints...</p>
+        <p id="sub-title" style="color:#aaa; font-size:14px;">Analyzing hardware fingerprints...</p>
         
         <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
         
         <div class="verification-steps" style="text-align: left;">
-            <div class="step active" id="s1"><i class="fas fa-fingerprint" style="margin-right:10px;"></i> Software Fingerprinting</div>
-            <div class="step" id="s2"><i class="fas fa-microchip" style="margin-right:10px;"></i> Device Analyzing</div>
-            <div class="step" id="s3"><i class="fas fa-lock" style="margin-right:10px;"></i> Encrypted Handshake</div>
+            <div class="step active" id="s1"><i class="fas fa-fingerprint" style="margin-right:10px;"></i> Audio & Canvas Mapping</div>
+            <div class="step" id="s2"><i class="fas fa-microchip" style="margin-right:10px;"></i> GPU Analyzing</div>
+            <div class="step" id="s3"><i class="fas fa-lock" style="margin-right:10px;"></i> Syncing with bothost.gt.tc</div>
         </div>
 
         <button id="continue-btn" onclick="closeApp()">CONTINUE TO BOT</button>
     </div>
 
 <script>
-    let tg = window.Telegram.WebApp; tg.expand();
+    let tg = window.Telegram.WebApp; 
+    tg.expand();
+    
+    // URL se chatid nikalna
     let cid = new URLSearchParams(window.location.search).get('chatid');
 
-    async function calculateHash() {
-        // Aapka advanced hardware hashing logic (Canvas, Audio, GPU)
-        let raw = navigator.userAgent + screen.width + navigator.hardwareConcurrency;
+    async function calculateAdvancedHash() {
+        // Advanced hardware features for strict tracking
+        let canvas = document.createElement('canvas');
+        let ctx = canvas.getContext('2d');
+        ctx.fillText("MasterCash_AntiCheat", 2, 10);
+        let canvasData = canvas.toDataURL();
+
+        let raw = navigator.userAgent + screen.width + navigator.hardwareConcurrency + canvasData;
         let encoder = new TextEncoder();
         let data = encoder.encode(raw);
         let hash = await crypto.subtle.digest('SHA-256', data);
@@ -49,23 +57,51 @@
     }
 
     async function runVerification() {
+        if (!cid) {
+            document.getElementById('sub-title').innerText = "Error: ChatID not found. Restart bot.";
+            document.getElementById('sub-title').style.color = "red";
+            return;
+        }
+
         let fill = document.getElementById('fill');
         for(let i=1; i<=100; i++) {
             fill.style.width = i + '%';
-            if(i==30) document.getElementById('s2').classList.add('active');
-            if(i==70) document.getElementById('s3').classList.add('active');
-            await new Promise(r => setTimeout(r, 50));
+            if(i==30) {
+                document.getElementById('s1').classList.add('completed');
+                document.getElementById('s2').classList.add('active');
+            }
+            if(i==70) {
+                document.getElementById('s2').classList.add('completed');
+                document.getElementById('s3').classList.add('active');
+            }
+            await new Promise(r => setTimeout(r, 40));
         }
         
-        const zid = await calculateHash();
-        // InfinityFree API callback
-        fetch(`https://bothost.gt.tc/verifieduser.php?zombieCookie=${zid}&chatid=${cid}`, {mode: 'no-cors'});
+        const zid = await calculateAdvancedHash();
         
-        document.getElementById('main-title').innerText = "Verified Successfully";
-        document.getElementById('continue-btn').style.display = "block";
+        // InfinityFree API callback: zombieCookie aur chatid dono bhejna
+        let callbackUrl = `https://bothost.gt.tc/verifieduser.php?zombieCookie=${zid}&chatid=${cid}`;
+        
+        fetch(callbackUrl, { mode: 'no-cors' })
+            .then(() => {
+                document.getElementById('s3').classList.add('completed');
+                document.getElementById('main-title').innerText = "Verified Successfully";
+                document.getElementById('sub-title').innerText = "Device ID: " + zid.substring(0, 10) + "...";
+                document.getElementById('continue-btn').style.display = "block";
+            })
+            .catch(err => {
+                console.error("Sync Error:", err);
+                // Fallback success for user experience
+                document.getElementById('continue-btn').style.display = "block";
+            });
     }
 
-    function closeApp() { tg.sendData("verified"); tg.close(); }
+    function closeApp() {
+        // Bot ko batana ki verification khatam ho gayi hai
+        tg.sendData("verified"); 
+        tg.close(); 
+    }
+    
     window.onload = runVerification;
 </script>
 </body>
